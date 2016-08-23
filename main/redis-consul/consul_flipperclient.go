@@ -29,26 +29,28 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
 	}
         if configuration.Consul.Scheme != "" {
                 connectionDetails.Scheme = configuration.Consul.Scheme
-		if configuration.Consul.CACert != "" {
-			// Load client cert
-			cert, err := tls.LoadX509KeyPair(configuration.Consul.Cert, configuration.Consul.Key)
-			if err != nil {
-				logger.Error.Panicf(err.Error())
+		if connectionDetails.Scheme == "https" {
+                	// Setup HTTPS client
+                        tlsConfig := &tls.Config{}			
+			if configuration.Consul.Cert != "" && configuration.Consul.Key != "" {
+				// Load client cert
+				cert, err := tls.LoadX509KeyPair(configuration.Consul.Cert, configuration.Consul.Key)
+				if err != nil {
+					logger.Error.Panicf(err.Error())
+				}
+				tlsConfig.Certificates = []tls.Certificate{cert}
 			}
-			// Load CA cert
-			caCert, err := ioutil.ReadFile(configuration.Consul.CACert)
-			if err != nil {
-				logger.Error.Panicf(err.Error())
+			if configuration.Consul.CACert != "" {
+				// Load CA cert
+				caCert, err := ioutil.ReadFile(configuration.Consul.CACert)
+				if err != nil {
+					logger.Error.Panicf(err.Error())
+				}
+				caCertPool := x509.NewCertPool()
+				caCertPool.AppendCertsFromPEM(caCert)
+				tlsConfig.RootCAs = caCertPool
+				tlsConfig.BuildNameToCertificate()
 			}
-			caCertPool := x509.NewCertPool()
-			caCertPool.AppendCertsFromPEM(caCert)
-
-			// Setup HTTPS client
-			tlsConfig := &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				RootCAs:      caCertPool,
-			}
-			tlsConfig.BuildNameToCertificate()
 			transport := &http.Transport{TLSClientConfig: tlsConfig}
 			connectionDetails.HttpClient = &http.Client{Transport: transport}
 		}
