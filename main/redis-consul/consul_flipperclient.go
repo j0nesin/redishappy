@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -27,11 +27,11 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
 	if configuration.Consul.Address != "" {
 		connectionDetails.Address = configuration.Consul.Address
 	}
-        if configuration.Consul.Scheme != "" {
-                connectionDetails.Scheme = configuration.Consul.Scheme
+	if configuration.Consul.Scheme != "" {
+		connectionDetails.Scheme = configuration.Consul.Scheme
 		if connectionDetails.Scheme == "https" {
-                	// Setup HTTPS client
-                        tlsConfig := &tls.Config{}			
+			// Setup HTTPS client
+			tlsConfig := &tls.Config{}
 			if configuration.Consul.Cert != "" && configuration.Consul.Key != "" {
 				// Load client cert
 				cert, err := tls.LoadX509KeyPair(configuration.Consul.Cert, configuration.Consul.Key)
@@ -54,7 +54,7 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
 			transport := &http.Transport{TLSClientConfig: tlsConfig}
 			connectionDetails.HttpClient = &http.Client{Transport: transport}
 		}
-        }
+	}
 
 	client, err := consulapi.NewClient(connectionDetails)
 
