@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+	"net/http"
 
 	consulapi "github.com/armon/consul-api"
 	"github.com/mdevilliers/redishappy/configuration"
@@ -23,6 +27,27 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
 	if configuration.Consul.Address != "" {
 		connectionDetails.Address = configuration.Consul.Address
 	}
+        if configuration.Consul.Scheme != "" {
+                connectionDetails.Scheme = configuration.Consul.Scheme
+		if configuration.Consul.CACert != "" {
+			// Load CA cert
+			caCert, err := ioutil.ReadFile(configuration.Consul.CACert)
+			if err != nil {
+				logger.Error.Panicf(err.Error())
+			}
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+
+			// Setup HTTPS client
+			tlsConfig := &tls.Config{
+//				Certificates: []tls.Certificate{cert},
+				RootCAs:      caCertPool,
+			}
+			tlsConfig.BuildNameToCertificate()
+			transport := &http.Transport{TLSClientConfig: tlsConfig}
+			connectionDetails.HttpClient = &http.Client{Transport: transport}
+		}
+        }
 
 	client, err := consulapi.NewClient(connectionDetails)
 

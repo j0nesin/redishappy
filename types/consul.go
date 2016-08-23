@@ -4,6 +4,8 @@ import "errors"
 
 type Consul struct {
 	Address  string    `json:"address"`
+	Scheme   string    `json:"scheme"`
+	CACert   string    `json:"cacert"`
 	Services []Service `json:"services"`
 }
 
