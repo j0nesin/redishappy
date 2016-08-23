@@ -30,6 +30,11 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
         if configuration.Consul.Scheme != "" {
                 connectionDetails.Scheme = configuration.Consul.Scheme
 		if configuration.Consul.CACert != "" {
+			// Load client cert
+			cert, err := tls.LoadX509KeyPair(configuration.Consul.Cert, configuration.Consul.Key)
+			if err != nil {
+				logger.Error.Panicf(err.Error())
+			}
 			// Load CA cert
 			caCert, err := ioutil.ReadFile(configuration.Consul.CACert)
 			if err != nil {
@@ -40,7 +45,7 @@ func NewConsulFlipperClient(cm *configuration.ConfigurationManager) *ConsulFlipp
 
 			// Setup HTTPS client
 			tlsConfig := &tls.Config{
-//				Certificates: []tls.Certificate{cert},
+				Certificates: []tls.Certificate{cert},
 				RootCAs:      caCertPool,
 			}
 			tlsConfig.BuildNameToCertificate()
